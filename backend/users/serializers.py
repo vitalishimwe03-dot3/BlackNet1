@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
 from rest_framework import serializers
 
-from .models import User, UserProfile, UserSession
+from .models import User, UserSession
 
 UserModel = get_user_model()
 
@@ -57,6 +57,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = UserModel
         fields = ["id", "username", "email", "password"]
 
+    def validate_username(self, value):
+        if UserModel.objects.filter(username=value).exists():
+            raise serializers.ValidationError("USERNAME_TAKEN")
+        return value
+
+    def validate_email(self, value):
+        if UserModel.objects.filter(email=value).exists():
+            raise serializers.ValidationError("EMAIL_TAKEN")
+        return value
+
     def validate_password(self, value):
         try:
             validate_password(value)
@@ -70,7 +80,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validated_data["email"],
             password=validated_data["password"],
         )
-        UserProfile.objects.create(user=user, bio=user.bio or "")
         return user
 
 

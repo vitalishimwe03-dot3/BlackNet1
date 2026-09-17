@@ -70,12 +70,17 @@ async function doRefresh(refresh: string): Promise<string> {
 
 export async function apiError(error: unknown): Promise<string> {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as { detail?: string; code?: string; errors?: unknown } | string | undefined;
+    const data = error.response?.data as { detail?: string; code?: string; errors?: Record<string, string[]> } | string | undefined;
     if (typeof data === "string") return data;
     if (data) {
       if (data.detail) return data.detail;
+      if (data.errors) {
+        const msgs = Object.entries(data.errors)
+          .flatMap(([, v]) => (Array.isArray(v) ? v : [String(v)]))
+          .join("; ");
+        if (msgs) return msgs;
+      }
       if (data.code) return data.code;
-      if (data.errors) return JSON.stringify(data.errors).slice(0, 200);
       const fieldErrors = Object.entries(data).filter(([k]) => k !== "detail" && k !== "code");
       if (fieldErrors.length > 0) {
         const first = fieldErrors[0];

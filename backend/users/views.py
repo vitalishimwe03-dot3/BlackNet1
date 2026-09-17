@@ -38,8 +38,24 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+
+        user.is_online = True
+        user.last_active = timezone.now()
+        user.save(update_fields=["is_online", "last_active"])
+
         refresh = RefreshToken.for_user(user)
         SecurityEvent.objects.create(user=user, event_type="ACCOUNT_REGISTERED", ip_address=request_ip(request))
+
+        ua = request.META.get("HTTP_USER_AGENT", "")[:512]
+        UserSession.objects.create(
+            user=user,
+            token_id=str(refresh["jti"]),
+            user_agent=ua,
+            ip_address=request_ip(request),
+            device_name=friendly_device_name(ua),
+            is_current=True,
+        )
+
         return Response(
             {
                 "user": MeSerializer(user).data,

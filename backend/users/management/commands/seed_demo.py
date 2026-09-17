@@ -32,7 +32,7 @@ class Command(BaseCommand):
         from notifications.models import Notification
 
         admin = User.objects.create_superuser("admin", "admin@blacknet.dev", PASS)
-        UserProfile.objects.create(user=admin, display_name="NEXUS ADMIN", bio="Platform administrator.")
+        UserProfile.objects.get_or_create(user=admin, defaults={"display_name": "NEXUS ADMIN", "bio": "Platform administrator."})
 
         demo_users = []
         for idx, (uname, display) in enumerate([
@@ -43,11 +43,11 @@ class Command(BaseCommand):
             ("ciphergrl", "Cipher"),
         ]):
             user = User.objects.create_user(uname, f"{uname}@blacknet.dev", PASS)
-            UserProfile.objects.create(user=user, display_name=display, bio=f"Welcome to Nexus, {display}.")
+            UserProfile.objects.get_or_create(user=user, defaults={"display_name": display, "bio": f"Welcome to Nexus, {display}."})
             demo_users.append(user)
 
         net = User.objects.create_user("netmonk", "netmonk@blacknet.dev", PASS)
-        UserProfile.objects.create(user=net, display_name="NET MONK", bio="I run the feeds.")
+        UserProfile.objects.get_or_create(user=net, defaults={"display_name": "NET MONK", "bio": "I run the feeds."})
 
         # Communities
         names = ["development", "linux", "cybersecurity", "ai", "design", "gaming", "science"]
